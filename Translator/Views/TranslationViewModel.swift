@@ -7,6 +7,7 @@ class TranslationViewModel: ObservableObject {
     @Published var outputText: String = ""
     @Published var isTranslating: Bool = false
     @Published var errorMessage: String?
+    @Published var shouldFocusInput: Bool = false
 
     private var currentTask: Task<Void, Never>?
     private let translationService: TranslationService
@@ -17,15 +18,11 @@ class TranslationViewModel: ObservableObject {
 
     /// 触发翻译（从快捷键）
     func triggerTranslation() {
-        // 使用剪贴板内容
-        if let clipboardText = NSPasteboard.general.string(forType: .string), !clipboardText.isEmpty {
-            inputText = clipboardText
-            translate()
-            return
-        }
-
-        // 否则聚焦到输入框等待手动输入
-        errorMessage = TranslationError.noTextSelected.localizedDescription
+        // 只清空输入并聚焦输入框，等待用户手动输入
+        inputText = ""
+        outputText = ""
+        errorMessage = nil
+        shouldFocusInput = true
     }
 
     /// 执行翻译

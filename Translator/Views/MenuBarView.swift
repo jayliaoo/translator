@@ -24,7 +24,7 @@ struct MenuBarView: View {
 
                 Spacer()
 
-                Text("按 ⌥Space 翻译")
+                Text("按 ⌥Space 开始输入")
                     .font(.caption)
                     .foregroundColor(.secondary)
 

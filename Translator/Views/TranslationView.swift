@@ -91,5 +91,11 @@ struct TranslationView: View {
         .onAppear {
             isInputFocused = true
         }
+        .onChange(of: viewModel.shouldFocusInput) { _, newValue in
+            if newValue {
+                isInputFocused = true
+                viewModel.shouldFocusInput = false
+            }
+        }
     }
 }
