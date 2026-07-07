@@ -47,7 +47,8 @@ class LLMTranslationService: TranslationService {
             ],
             "stream": true,
             "stream_options": ["include_usage": true],
-            "temperature": 0.3
+            "temperature": 0.3,
+            "enable_thinking": false
         ]
 
         request.httpBody = try JSONSerialization.data(withJSONObject: body)
