@@ -24,12 +24,12 @@ class Settings: ObservableObject {
     }
 
     // MARK: - 翻译配置
-    @Published var targetLanguage: String {
-        didSet { UserDefaults.standard.set(targetLanguage, forKey: "targetLanguage") }
-    }
     @Published var customPrompt: String {
         didSet { UserDefaults.standard.set(customPrompt, forKey: "customPrompt") }
     }
+
+    // MARK: - 常用语言
+    static let availableLanguages = ["中文", "English", "日本語", "한국어", "Français", "Deutsch", "Español"]
 
     // MARK: - 快捷键
     @Published var hotkeyString: String {
@@ -39,26 +39,12 @@ class Settings: ObservableObject {
     // MARK: - 默认值
     private let defaultBaseURL = "https://api.openai.com"
     private let defaultModel = "gpt-4o-mini"
-    private let defaultTargetLanguage = "中文"
     private let defaultHotkey = "⌥Space"
-    private let defaultPrompt = """
-    You are a professional translator. Translate the following text to {target_language}.
-
-    Requirements:
-    - Maintain the original meaning and tone
-    - Use natural, fluent language
-    - Preserve formatting and special characters
-    - If the text is already in the target language, respond with "无需翻译"
-
-    Text to translate:
-    {text}
-    """
 
     init() {
         self.apiBaseURL = UserDefaults.standard.string(forKey: "apiBaseURL") ?? "https://api.openai.com"
         self.apiKey = KeychainService.load(forKey: "apiKey") ?? ""
         self.modelName = UserDefaults.standard.string(forKey: "modelName") ?? "gpt-4o-mini"
-        self.targetLanguage = UserDefaults.standard.string(forKey: "targetLanguage") ?? "中文"
         self.customPrompt = UserDefaults.standard.string(forKey: "customPrompt") ?? """
             You are a professional translator. Translate the following text to {target_language}.
 
@@ -75,7 +61,7 @@ class Settings: ObservableObject {
     }
 
     /// 构建最终的 prompt
-    func buildPrompt(for text: String) -> String {
+    func buildPrompt(for text: String, targetLanguage: String) -> String {
         var prompt = customPrompt
         prompt = prompt.replacingOccurrences(of: "{target_language}", with: targetLanguage)
         prompt = prompt.replacingOccurrences(of: "{text}", with: text)

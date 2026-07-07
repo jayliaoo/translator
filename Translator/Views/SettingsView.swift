@@ -79,21 +79,13 @@ struct SettingsView: View {
         VStack(alignment: .leading, spacing: 16) {
             GroupBox("翻译设置") {
                 VStack(alignment: .leading, spacing: 12) {
-                    // 目标语言
-                    VStack(alignment: .leading, spacing: 4) {
-                        Text("目标语言")
-                            .font(.caption)
-                        TextField("中文", text: $settings.targetLanguage)
-                            .textFieldStyle(.roundedBorder)
-                    }
-
                     // 自定义 Prompt
                     VStack(alignment: .leading, spacing: 4) {
                         Text("自定义 Prompt")
                             .font(.caption)
                         TextEditor(text: $settings.customPrompt)
                             .font(.system(.body, design: .monospaced))
-                            .frame(height: 120)
+                            .frame(height: 160)
                             .overlay(
                                 RoundedRectangle(cornerRadius: 6)
                                     .stroke(Color.gray.opacity(0.3), lineWidth: 1)

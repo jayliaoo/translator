@@ -9,12 +9,16 @@ class TranslationViewModel: ObservableObject {
     @Published var errorMessage: String?
     @Published var shouldFocusInput: Bool = false
     @Published var metrics: TranslationMetrics?
+    @Published var targetLanguage: String {
+        didSet { UserDefaults.standard.set(targetLanguage, forKey: "targetLanguage") }
+    }
 
     private var currentTask: Task<Void, Never>?
     private let translationService: TranslationService
 
     init(translationService: TranslationService = LLMTranslationService()) {
         self.translationService = translationService
+        self.targetLanguage = UserDefaults.standard.string(forKey: "targetLanguage") ?? "中文"
     }
 
     /// 触发翻译（从快捷键）
@@ -45,7 +49,7 @@ class TranslationViewModel: ObservableObject {
             do {
                 let stream = try await translationService.translate(
                     inputText,
-                    targetLanguage: Settings.shared.targetLanguage,
+                    targetLanguage: targetLanguage,
                     customPrompt: nil
                 )
 

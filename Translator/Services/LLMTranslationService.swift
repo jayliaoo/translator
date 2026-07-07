@@ -13,7 +13,7 @@ class LLMTranslationService: TranslationService {
             throw TranslationError.invalidAPIKey
         }
 
-        let prompt = settings.buildPrompt(for: text)
+        let prompt = settings.buildPrompt(for: text, targetLanguage: targetLanguage)
 
         // 构建请求 - 智能拼接 URL，避免重复 /v1
         var baseURL = settings.apiBaseURL

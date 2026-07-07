@@ -7,6 +7,26 @@ struct TranslationView: View {
 
     var body: some View {
         VStack(spacing: 12) {
+            // 目标语言选择
+            HStack(spacing: 6) {
+                Image(systemName: "globe")
+                    .font(.caption)
+                    .foregroundColor(.secondary)
+                Text("译至")
+                    .font(.caption)
+                    .foregroundColor(.secondary)
+                Picker("目标语言", selection: $viewModel.targetLanguage) {
+                    ForEach(Settings.availableLanguages, id: \.self) { lang in
+                        Text(lang).tag(lang)
+                    }
+                }
+                .pickerStyle(.menu)
+                .menuStyle(.borderlessButton)
+                .labelsHidden()
+
+                Spacer(minLength: 0)
+            }
+
             // 输入区域
             VStack(alignment: .leading, spacing: 8) {
                 Text("原文")
