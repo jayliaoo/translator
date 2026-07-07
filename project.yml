@@ -1,0 +1,36 @@
+name: Translator
+options:
+  bundleIdPrefix: com.translator
+  deploymentTarget:
+    macOS: "14.0"
+  xcodeVersion: "15.0"
+  createIntermediateGroups: true
+  generateEmptyDirectories: true
+
+settings:
+  base:
+    SWIFT_VERSION: "5.9"
+    MACOSX_DEPLOYMENT_TARGET: "14.0"
+
+targets:
+  Translator:
+    type: application
+    platform: macOS
+    sources:
+      - path: Translator
+        excludes:
+          - "Info.plist"
+    settings:
+      base:
+        INFOPLIST_FILE: Translator/Info.plist
+        PRODUCT_BUNDLE_IDENTIFIER: com.translator.app
+        PRODUCT_NAME: Translator
+        MARKETING_VERSION: "1.0.0"
+        CURRENT_PROJECT_VERSION: "1"
+        CODE_SIGN_IDENTITY: "-"
+        CODE_SIGN_ENTITLEMENTS: Translator/Translator.entitlements
+        GENERATE_INFOPLIST_FILE: false
+        LD_RUNPATH_SEARCH_PATHS: "$(inherited) @executable_path/../Frameworks"
+    entitlements:
+      path: Translator/Translator.entitlements
+      allowNonModularImports: true
