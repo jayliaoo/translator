@@ -39,10 +39,12 @@ open Translator.xcodeproj
   - `Models/` — `TranslationService` 协议、`Settings` 配置管理
   - `Services/` — `LLMTranslationService`（OpenAI 兼容 API）、`KeychainService`、`AccessibilityService`
   - `Views/` — `MenuBarView`（menubar 弹窗）、`TranslationView`（翻译 UI）、`SettingsView`（设置窗口）、`TranslationViewModel`
-- **LLM 调用**：OpenAI 兼容接口 `/v1/chat/completions`，支持流式 SSE 输出，可配置 `baseURL / apiKey / model`
+- **LLM 调用**：OpenAI 兼容接口 `/v1/chat/completions`，支持流式 SSE 输出，可配置 `baseURL / apiKey / model`。兼容 OpenAI、DeepSeek、通义千问、Moonshot 等
+- **自定义 Prompt**：支持模板变量 `{target_language}` 和 `{text}`，在 `Settings.buildPrompt()` 中替换
 - **输入来源优先级**：Accessibility API 获取选中文本 → 剪贴板 → 手动输入
 - **并发**：`async/await` + `Task` 管理翻译请求，支持取消
 - **安全**：API key 存 Keychain，不写入代码或日志
+- **权限**：需要辅助功能权限（Accessibility）获取选中文本；需要网络权限访问 LLM API
 
 ## 翻译流程
 

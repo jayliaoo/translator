@@ -24,19 +24,18 @@ macOS menubar 常驻翻译器，基于大模型 API 提供流式翻译。
 git clone <repo-url>
 cd translator
 
-# 构建
-swift build
+# 首次 / 修改 project.yml 后：生成 .xcodeproj
+xcodegen generate
 
-# 运行
-swift run Translator
+# 命令行构建
+xcodebuild -project Translator.xcodeproj -scheme Translator -configuration Debug build
+
+# 或通过 Xcode
+open Translator.xcodeproj
+# ⌘R 运行
 ```
 
-或通过 Xcode：
-
-1. 打开 Xcode
-2. File → Open，选择项目目录
-3. 选择 `Package.swift`
-4. ⌘R 运行
+> `project.yml` 是项目的唯一描述文件，`.xcodeproj` 由它生成。
 
 ## 使用方法
 
@@ -123,14 +122,18 @@ Text to translate:
 ## 开发
 
 ```bash
+# 生成 .xcodeproj
+xcodegen generate
+
 # 构建
-swift build
+xcodebuild -project Translator.xcodeproj -scheme Translator -configuration Debug build
 
 # 运行
-swift run Translator
+open Translator.xcodeproj
+# 然后在 Xcode 中 ⌘R 运行
 
 # 测试
-swift test
+xcodebuild test -project Translator.xcodeproj -scheme Translator
 ```
 
 ## 许可证
