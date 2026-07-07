@@ -15,8 +15,26 @@ class LLMTranslationService: TranslationService {
 
         let prompt = settings.buildPrompt(for: text)
 
-        // 构建请求
-        let url = URL(string: "\(settings.apiBaseURL)/v1/chat/completions")!
+        // 构建请求 - 智能拼接 URL，避免重复 /v1
+        var baseURL = settings.apiBaseURL
+        // 去掉末尾斜杠
+        if baseURL.hasSuffix("/") {
+            baseURL = String(baseURL.dropLast())
+        }
+
+        let endpoint: String
+        if baseURL.hasSuffix("/v1") {
+            // Base URL 已包含 /v1，只需拼接 /chat/completions
+            endpoint = "\(baseURL)/chat/completions"
+        } else {
+            // Base URL 不包含 /v1，拼接完整路径
+            endpoint = "\(baseURL)/v1/chat/completions"
+        }
+
+        guard let url = URL(string: endpoint) else {
+            throw TranslationError.networkError("无效的 URL: \(endpoint)")
+        }
+
         var request = URLRequest(url: url)
         request.httpMethod = "POST"
         request.setValue("Bearer \(settings.apiKey)", forHTTPHeaderField: "Authorization")
