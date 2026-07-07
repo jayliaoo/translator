@@ -32,3 +32,5 @@ Package.resolved
 # Secrets
 .env
 *.secret
+
+.github_token
