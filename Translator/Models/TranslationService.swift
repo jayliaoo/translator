@@ -1,8 +1,27 @@
 import Foundation
 
+/// 翻译指标
+struct TranslationMetrics {
+    let firstTokenLatency: TimeInterval  // 首 token 延迟（秒）
+    let totalDuration: TimeInterval      // 总耗时（秒）
+    let inputTokens: Int
+    let outputTokens: Int
+
+    var tokensPerSecond: Double {
+        let generationTime = totalDuration - firstTokenLatency
+        return generationTime > 0 ? Double(outputTokens) / generationTime : 0
+    }
+}
+
+/// 翻译事件
+enum TranslationEvent {
+    case chunk(String)
+    case completed(TranslationMetrics)
+}
+
 /// 翻译服务协议
 protocol TranslationService {
-    func translate(_ text: String, targetLanguage: String, customPrompt: String?) async throws -> AsyncThrowingStream<String, Error>
+    func translate(_ text: String, targetLanguage: String, customPrompt: String?) async throws -> AsyncThrowingStream<TranslationEvent, Error>
 }
 
 /// 翻译错误

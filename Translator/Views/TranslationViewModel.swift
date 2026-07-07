@@ -8,6 +8,7 @@ class TranslationViewModel: ObservableObject {
     @Published var isTranslating: Bool = false
     @Published var errorMessage: String?
     @Published var shouldFocusInput: Bool = false
+    @Published var metrics: TranslationMetrics?
 
     private var currentTask: Task<Void, Never>?
     private let translationService: TranslationService
@@ -22,6 +23,7 @@ class TranslationViewModel: ObservableObject {
         inputText = ""
         outputText = ""
         errorMessage = nil
+        metrics = nil
         shouldFocusInput = true
     }
 
@@ -36,6 +38,7 @@ class TranslationViewModel: ObservableObject {
 
         outputText = ""
         errorMessage = nil
+        metrics = nil
         isTranslating = true
 
         currentTask = Task {
@@ -46,12 +49,19 @@ class TranslationViewModel: ObservableObject {
                     customPrompt: nil
                 )
 
-                for try await chunk in stream {
+                for try await event in stream {
                     if Task.isCancelled {
                         break
                     }
-                    await MainActor.run {
-                        outputText += chunk
+                    switch event {
+                    case .chunk(let text):
+                        await MainActor.run {
+                            outputText += text
+                        }
+                    case .completed(let m):
+                        await MainActor.run {
+                            metrics = m
+                        }
                     }
                 }
 

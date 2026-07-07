@@ -75,6 +75,25 @@ struct TranslationView: View {
                 }
             }
 
+            // 翻译指标
+            if let m = viewModel.metrics, !viewModel.isTranslating {
+                HStack(spacing: 6) {
+                    Text("首token \(Self.formatDuration(m.firstTokenLatency))")
+                    Text("·").foregroundStyle(.quaternary)
+                    Text("总耗时 \(Self.formatDuration(m.totalDuration))")
+                    Text("·").foregroundStyle(.quaternary)
+                    Text("输入 \(m.inputTokens)")
+                    Text("·").foregroundStyle(.quaternary)
+                    Text("输出 \(m.outputTokens)")
+                    Text("·").foregroundStyle(.quaternary)
+                    Text(Self.formatRate(m.tokensPerSecond))
+                    Spacer(minLength: 0)
+                }
+                .font(.system(size: 10))
+                .monospacedDigit()
+                .foregroundStyle(.secondary)
+            }
+
             // 错误提示
             if let error = viewModel.errorMessage {
                 HStack {
@@ -96,6 +115,22 @@ struct TranslationView: View {
                 isInputFocused = true
                 viewModel.shouldFocusInput = false
             }
+        }
+    }
+
+    private static func formatDuration(_ seconds: TimeInterval) -> String {
+        if seconds < 1 {
+            return String(format: "%.2fs", seconds)
+        } else {
+            return String(format: "%.1fs", seconds)
+        }
+    }
+
+    private static func formatRate(_ tokensPerSecond: Double) -> String {
+        if tokensPerSecond >= 10 {
+            return String(format: "%.0f tok/s", tokensPerSecond)
+        } else {
+            return String(format: "%.1f tok/s", tokensPerSecond)
         }
     }
 }

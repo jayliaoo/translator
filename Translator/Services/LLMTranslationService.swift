@@ -8,7 +8,7 @@ class LLMTranslationService: TranslationService {
         self.settings = settings
     }
 
-    func translate(_ text: String, targetLanguage: String, customPrompt: String? = nil) async throws -> AsyncThrowingStream<String, Error> {
+    func translate(_ text: String, targetLanguage: String, customPrompt: String? = nil) async throws -> AsyncThrowingStream<TranslationEvent, Error> {
         guard settings.isConfigured else {
             throw TranslationError.invalidAPIKey
         }
@@ -46,6 +46,7 @@ class LLMTranslationService: TranslationService {
                 ["role": "user", "content": prompt]
             ],
             "stream": true,
+            "stream_options": ["include_usage": true],
             "temperature": 0.3
         ]
 
@@ -55,6 +56,11 @@ class LLMTranslationService: TranslationService {
         return AsyncThrowingStream { continuation in
             Task {
                 do {
+                    let startTime = Date()
+                    var firstTokenTime: Date?
+                    var inputTokens = 0
+                    var outputTokens = 0
+
                     let (bytes, response) = try await URLSession.shared.bytes(for: request)
 
                     guard let httpResponse = response as? HTTPURLResponse else {
@@ -77,20 +83,45 @@ class LLMTranslationService: TranslationService {
                         if line.hasPrefix("data: ") {
                             let data = String(line.dropFirst(6))
                             if data == "[DONE]" {
+                                let metrics = TranslationMetrics(
+                                    firstTokenLatency: firstTokenTime.map { $0.timeIntervalSince(startTime) } ?? 0,
+                                    totalDuration: Date().timeIntervalSince(startTime),
+                                    inputTokens: inputTokens,
+                                    outputTokens: outputTokens
+                                )
+                                continuation.yield(.completed(metrics))
                                 continuation.finish()
                                 return
                             }
 
                             if let jsonData = data.data(using: .utf8),
-                               let json = try? JSONSerialization.jsonObject(with: jsonData) as? [String: Any],
-                               let choices = json["choices"] as? [[String: Any]],
-                               let delta = choices.first?["delta"] as? [String: Any],
-                               let content = delta["content"] as? String {
-                                continuation.yield(content)
+                               let json = try? JSONSerialization.jsonObject(with: jsonData) as? [String: Any] {
+                                // 解析最终 usage 信息
+                                if let usage = json["usage"] as? [String: Any] {
+                                    inputTokens = usage["prompt_tokens"] as? Int ?? inputTokens
+                                    outputTokens = usage["completion_tokens"] as? Int ?? outputTokens
+                                }
+                                // 解析内容块
+                                if let choices = json["choices"] as? [[String: Any]],
+                                   let delta = choices.first?["delta"] as? [String: Any],
+                                   let content = delta["content"] as? String {
+                                    if firstTokenTime == nil {
+                                        firstTokenTime = Date()
+                                    }
+                                    continuation.yield(.chunk(content))
+                                }
                             }
                         }
                     }
 
+                    // 流结束但未收到 [DONE]
+                    let metrics = TranslationMetrics(
+                        firstTokenLatency: firstTokenTime.map { $0.timeIntervalSince(startTime) } ?? 0,
+                        totalDuration: Date().timeIntervalSince(startTime),
+                        inputTokens: inputTokens,
+                        outputTokens: outputTokens
+                    )
+                    continuation.yield(.completed(metrics))
                     continuation.finish()
                 } catch {
                     continuation.finish(throwing: TranslationError.networkError(error.localizedDescription))
