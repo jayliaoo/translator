@@ -119,34 +119,8 @@ struct SettingsView: View {
                     Text("当前快捷键: ⌥Space (Option + 空格)")
                         .font(.headline)
 
-                    Text("提示：全局快捷键用于在任意应用中快速触发翻译。")
+                    Text("提示：全局快捷键用于在任意应用中快速触发翻译。按下后会使用剪贴板内容进行翻译。")
                         .font(.caption)
-
-                    Divider()
-
-                    VStack(alignment: .leading, spacing: 8) {
-                        Label("辅助功能权限", systemImage: "accessibility")
-                            .font(.headline)
-
-                        Text("要使用「选中文字翻译」功能，需要在系统偏好设置中授予辅助功能权限。")
-                            .font(.caption)
-
-                        Button("打开系统偏好设置") {
-                            if let url = URL(string: "x-apple.systempreferences:com.apple.preference.security?Privacy_Accessibility") {
-                                NSWorkspace.shared.open(url)
-                            }
-                        }
-                        .buttonStyle(.bordered)
-
-                        HStack {
-                            Circle()
-                                .fill(AccessibilityService.checkPermission() ? .green : .red)
-                                .frame(width: 8, height: 8)
-                            Text(AccessibilityService.checkPermission() ? "已授权" : "未授权")
-                                .font(.caption)
-                                .foregroundColor(AccessibilityService.checkPermission() ? .green : .red)
-                        }
-                    }
                 }
             }
 

@@ -17,21 +17,14 @@ class TranslationViewModel: ObservableObject {
 
     /// 触发翻译（从快捷键）
     func triggerTranslation() {
-        // 优先尝试获取选中文本
-        if let selectedText = AccessibilityService.getSelectedText() {
-            inputText = selectedText
-            translate()
-            return
-        }
-
-        // 其次使用剪贴板内容
+        // 使用剪贴板内容
         if let clipboardText = NSPasteboard.general.string(forType: .string), !clipboardText.isEmpty {
             inputText = clipboardText
             translate()
             return
         }
 
-        // 否则聚焦到输入框
+        // 否则聚焦到输入框等待手动输入
         errorMessage = TranslationError.noTextSelected.localizedDescription
     }
 

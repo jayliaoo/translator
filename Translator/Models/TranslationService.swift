@@ -22,7 +22,7 @@ enum TranslationError: LocalizedError {
         case .apiError(let msg):
             return "API 错误：\(msg)"
         case .noTextSelected:
-            return "未检测到选中的文本"
+            return "剪贴板中没有可翻译的文本"
         case .unknown:
             return "发生未知错误"
         }

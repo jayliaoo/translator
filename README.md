@@ -8,7 +8,6 @@ macOS menubar 常驻翻译器，基于大模型 API 提供流式翻译。
 - 🤖 **LLM 驱动**：支持 OpenAI 兼容接口（OpenAI、DeepSeek、通义千问等）
 - ⚡ **流式输出**：实时显示翻译结果
 - ⌨️ **全局快捷键**：⌥Space 一键触发翻译
-- 🎨 **智能选词**：自动获取当前选中文本（需辅助功能权限）
 - 🔐 **安全存储**：API key 存于 Keychain
 - ⚙️ **可自定义**：支持自定义 prompt 模板
 
@@ -45,11 +44,9 @@ open Translator.xcodeproj
    - API Key
    - Model 名称
 3. 设置目标语言（默认中文）
-4. 授权辅助功能权限（用于选词翻译）
 
 ### 翻译方式
 
-- **选词翻译**：选中文字 → 按 ⌥Space → 自动翻译
 - **剪贴板翻译**：复制文字 → 按 ⌥Space → 自动翻译
 - **手动输入**：点击 menubar → 输入文字 → ⌘Enter 翻译
 
@@ -60,7 +57,6 @@ open Translator.xcodeproj
 - OpenAI 兼容 API（流式 SSE）
 - Keychain 安全存储
 - Carbon API 全局快捷键
-- Accessibility API 选词获取
 - 零外部依赖
 
 ## 项目结构
@@ -74,7 +70,6 @@ Translator/
 ├── Services/
 │   ├── LLMTranslationService.swift  # LLM API 调用
 │   ├── KeychainService.swift        # Keychain 操作
-│   ├── AccessibilityService.swift   # 获取选中文本
 │   └── HotkeyService.swift          # 全局快捷键管理
 ├── Views/
 │   ├── MenuBarView.swift         # menubar 弹窗

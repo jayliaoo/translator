@@ -4,7 +4,7 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 
 ## 项目定位
 
-macOS menubar 常驻翻译器，基于 SwiftUI 构建，通过大模型 API（LLM）完成翻译。纯 menubar 模式（无主窗口），支持选词翻译、剪贴板翻译和手动输入。
+macOS menubar 常驻翻译器，基于 SwiftUI 构建，通过大模型 API（LLM）完成翻译。纯 menubar 模式（无主窗口），支持剪贴板翻译和手动输入。
 
 ## 技术栈
 
@@ -37,19 +37,19 @@ open Translator.xcodeproj
 - **App 入口**：`TranslatorApp.swift`，使用 `MenuBarExtra(.window)` 创建 menubar 弹窗，`LSUIElement = true` 隐藏 Dock 图标
 - **核心模块**：
   - `Models/` — `TranslationService` 协议、`Settings` 配置管理
-  - `Services/` — `LLMTranslationService`（OpenAI 兼容 API）、`KeychainService`、`AccessibilityService`
+  - `Services/` — `LLMTranslationService`（OpenAI 兼容 API）、`KeychainService`
   - `Views/` — `MenuBarView`（menubar 弹窗）、`TranslationView`（翻译 UI）、`SettingsView`（设置窗口）、`TranslationViewModel`
 - **LLM 调用**：OpenAI 兼容接口 `/v1/chat/completions`，支持流式 SSE 输出，可配置 `baseURL / apiKey / model`。兼容 OpenAI、DeepSeek、通义千问、Moonshot 等
 - **自定义 Prompt**：支持模板变量 `{target_language}` 和 `{text}`，在 `Settings.buildPrompt()` 中替换
-- **输入来源优先级**：Accessibility API 获取选中文本 → 剪贴板 → 手动输入
+- **输入来源优先级**：剪贴板 → 手动输入
 - **并发**：`async/await` + `Task` 管理翻译请求，支持取消
 - **安全**：API key 存 Keychain，不写入代码或日志
-- **权限**：需要辅助功能权限（Accessibility）获取选中文本；需要网络权限访问 LLM API
+- **权限**：需要网络权限访问 LLM API
 
 ## 翻译流程
 
 1. 用户按全局快捷键或点击 menubar 图标
-2. `AccessibilityService` 获取选中文本，或读取剪贴板，或手动输入
+2. 读取剪贴板内容，或手动输入
 3. `LLMTranslationService.translate()` 发起流式请求
 4. 实时渲染到 `TranslationView`
 5. 用户可复制结果
