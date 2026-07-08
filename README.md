@@ -131,6 +131,26 @@ open Translator.xcodeproj
 xcodebuild test -project Translator.xcodeproj -scheme Translator
 ```
 
+## 构建正式包
+
+> ⚠️ Xcode 26 的 `xcodebuild` 存在 SWBBuildService 死锁 bug（clang 管道满后挂起），
+> 推荐直接使用项目自带的 `build.sh` 脚本，通过 `swiftc` 编译，绕过 xcodebuild。
+
+```bash
+# 构建 .app（Release 优化）
+./build.sh
+
+# 构建 .app + 打包 .dmg
+./build.sh --dmg
+```
+
+产物：
+- `build/Release/Translator.app` — 可直接运行
+- `build/Release/Translator.dmg`（需 `--dmg`）— 分发给他人
+
+> 当前使用 Ad-hoc 签名，构建产物可直接在本机运行。
+> 如需分发给其他用户，需在 Xcode 中配置 Apple Developer 证书并进行 Notarization。
+
 ## 许可证
 
 MIT License
