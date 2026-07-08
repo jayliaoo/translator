@@ -1,82 +1,74 @@
 #!/bin/bash
-set -euo pipefail
 
-# 构建 Translator.app（绕过 xcodebuild 的 SWBBuildService 死锁问题）
+# Build script for Translator macOS app
+# Usage:
+#   ./build.sh          - Build the .app bundle (Release)
+#   ./build.sh dmg      - Build and package into a .dmg
+
+set -e
 
 APP_NAME="Translator"
-BUILD_DIR="build/Release"
-APP_BUNDLE="$BUILD_DIR/$APP_NAME.app"
-CONTENTS="$APP_BUNDLE/Contents"
-RESOURCES="$CONTENTS/Resources"
-SOURCES=$(find Translator -name "*.swift" | sort)
+SCHEME="Translator"
+PROJECT="Translator.xcodeproj"
+BUILD_DIR="build"
+APP_PATH="$BUILD_DIR/$APP_NAME.app"
+DMG_PATH="$BUILD_DIR/$APP_NAME.dmg"
+DMG_TEMP="$BUILD_DIR/dmg_temp"
 
-ASSET_CATALOG="Translator/Resources/Assets.xcassets"
-ASSET_OUT="/tmp/translator-actool-$$"
+# Clean previous build
+rm -rf "$BUILD_DIR"
+mkdir -p "$BUILD_DIR"
 
-echo "🔨 编译 Swift 源文件..."
-rm -rf "$APP_BUNDLE" 2>/dev/null
+echo "🔨 Building $APP_NAME (Release)..."
 
-# 先编译资源（在 .app bundle 创建之前，避免 actool 缓存被干扰）
-echo "🎨 编译资源（Assets.xcassets → Assets.car + AppIcon.icns）..."
-rm -rf "$ASSET_OUT"
-mkdir -p "$ASSET_OUT"
-xcrun actool --compile "$ASSET_OUT" \
-  --platform macosx \
-  --minimum-deployment-target 14.0 \
-  --app-icon AppIcon \
-  --errors \
-  --output-partial-info-plist "$ASSET_OUT/info.plist" \
-  "$ASSET_CATALOG"
+# Build the app with xcodebuild
+xcodebuild -project "$PROJECT" \
+    -scheme "$SCHEME" \
+    -configuration Release \
+    -derivedDataPath "$BUILD_DIR/DerivedData" \
+    -archivePath "$BUILD_DIR/$APP_NAME.xcarchive" \
+    archive \
+    CODE_SIGN_IDENTITY="-" \
+    CODE_SIGNING_ALLOWED=YES \
+    2>&1 | tail -5
 
-# 校验 actool 产出
-if [ ! -f "$ASSET_OUT/Assets.car" ]; then
-  echo "❌ actool 未产出 Assets.car,输出目录内容:"
-  ls -la "$ASSET_OUT"
-  exit 1
+# Export the archive to .app
+xcodebuild -exportArchive \
+    -archivePath "$BUILD_DIR/$APP_NAME.xcarchive" \
+    -exportOptionsPlist exportOptions.plist \
+    -exportPath "$BUILD_DIR/export" \
+    2>&1 | tail -5
+
+# Move .app to build root
+mv "$BUILD_DIR/export/$APP_NAME.app" "$APP_PATH"
+
+echo "✅ Built: $APP_PATH"
+
+# If "dmg" argument passed, create DMG
+if [ "$1" = "dmg" ]; then
+    echo ""
+    echo "📦 Creating DMG..."
+
+    # Prepare DMG staging folder
+    rm -rf "$DMG_TEMP"
+    mkdir -p "$DMG_TEMP"
+    cp -R "$APP_PATH" "$DMG_TEMP/"
+    ln -s /Applications "$DMG_TEMP/Applications"
+
+    # Create DMG
+    rm -f "$DMG_PATH"
+    hdiutil create -volname "$APP_NAME" \
+        -srcfolder "$DMG_TEMP" \
+        -ov -format UDZO \
+        "$DMG_PATH"
+
+    # Cleanup
+    rm -rf "$DMG_TEMP"
+
+    echo "✅ DMG created: $DMG_PATH"
+    echo ""
+    echo "📏 Size: $(du -h "$DMG_PATH" | cut -f1)"
 fi
-
-mkdir -p "$CONTENTS/MacOS"
-mkdir -p "$RESOURCES"
-
-swiftc \
-  -sdk "$(xcrun --show-sdk-path)" \
-  -target arm64-apple-macos14.0 \
-  -O \
-  -module-name "$APP_NAME" \
-  -o "$CONTENTS/MacOS/$APP_NAME" \
-  $SOURCES
-
-# 把编译产物搬到 .app bundle
-cp "$ASSET_OUT/Assets.car" "$RESOURCES/"
-[ -f "$ASSET_OUT/AppIcon.icns" ] && cp "$ASSET_OUT/AppIcon.icns" "$RESOURCES/"
-rm -rf "$ASSET_OUT"
-
-echo "📦 组装 Info.plist（合并图标字段）..."
-cp Translator/Info.plist "$CONTENTS/"
-# 把 actool 产出的 CFBundleIconFile / CFBundleIconName 合到 Info.plist
-# 用 AppIcon（对应 asset catalog 里的 AppIcon.appiconset，也是 actool 产出的 icns 文件名）
-plutil -replace CFBundleIconFile -string "AppIcon" "$CONTENTS/Info.plist"
-plutil -insert CFBundleIconName -string "AppIcon" "$CONTENTS/Info.plist"
-
-echo "🔏 Ad-hoc 签名..."
-codesign --force --sign - \
-  --entitlements Translator/Translator.entitlements \
-  "$APP_BUNDLE"
 
 echo ""
-echo "✅ 构建完成: $APP_BUNDLE"
-echo "   大小: $(du -sh "$APP_BUNDLE" | cut -f1)"
-echo "   资源:"
-ls -la "$RESOURCES/" | grep -v "^total" | awk '{print "     " $NF " (" $5 " bytes)"}'
-
-# 可选：打包为 .dmg
-if [ "${1:-}" = "--dmg" ]; then
-  echo ""
-  echo "💿 创建 .dmg..."
-  hdiutil create \
-    -volname "$APP_NAME" \
-    -srcfolder "$APP_BUNDLE" \
-    -ov -format UDZO \
-    "$BUILD_DIR/$APP_NAME.dmg"
-  echo "✅ DMG: $BUILD_DIR/$APP_NAME.dmg"
-fi
+echo "Done!"
